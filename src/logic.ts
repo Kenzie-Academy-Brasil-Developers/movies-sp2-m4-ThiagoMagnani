@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import { client } from "./database";
-import { QueryConfig } from "pg";
+import { QueryConfig, QueryResult } from "pg";
 import format from "pg-format";
+import { movies } from "./interfaces";
 
 export const getMovies = async (req: Request, res: Response) => {
     const query = `SELECT * FROM movies;`;
@@ -13,7 +14,7 @@ export const getMovies = async (req: Request, res: Response) => {
             text: queryString,
             values: [category],
         }
-        const data = await client.query(queryConfig);
+        const data: QueryResult<movies> = await client.query(queryConfig);
 
         if (!data.rowCount) {
             const query = `SELECT * FROM movies;`;
@@ -32,7 +33,7 @@ export const getMoviesID = async (req: Request, res: Response) => {
         text: queryString,
         values: [id],
     }
-    const data = await client.query(queryConfig);
+    const data: QueryResult<movies> = await client.query(queryConfig);
     return res.status(200).json(data.rows[0]);
 }
 
@@ -44,14 +45,14 @@ export const createMovies = async (req: Request, res: Response) => {
         text: queryString,
         values: [name, category, duration, price],
     }
-    const data = await client.query(queryConfig);
+    const data: QueryResult<movies> = await client.query(queryConfig);
     res.status(201).json(data.rows[0]);
 }
 
 export const editMovies = async (req: Request, res: Response) => {
     const { id } = req.params;
     const query = format(`UPDATE movies SET (%I) = ROW(%L) WHERE id = (%s) RETURNING *;`, Object.keys(req.body), Object.values(req.body), id);
-    const data = await client.query(query);
+    const data: QueryResult<movies> = await client.query(query);
     return res.status(200).json(data.rows[0]);
 }
 
